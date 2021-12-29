@@ -1,7 +1,7 @@
 <template>
   <div class="paper">
     <div class="paper-content">
-      <textarea v-model="note" @input="save" />
+      <textarea v-model="note" @input="save" spellcheck="false" />
     </div>
   </div>
 </template>
@@ -17,6 +17,7 @@ export default {
       id: "",
       note: "",
       user: "",
+      signalr: useSignalR()
     };
   },
   methods: {
@@ -30,7 +31,9 @@ export default {
           id: this.id,
           note: target.value,
           user: this.user,
-        });
+        }).then(() => {
+          this.signalr.invoke("NotifyOthers", this.id, this.note);
+        })
       }, 1000);
     },
     loadNote(id) {
@@ -56,18 +59,11 @@ export default {
       return uuidValue;
     },
     initializeSignalR(group) {
-      const signalr = useSignalR();
-
-      signalr.on("NoteUpdated", (id, note) => {
+      this.signalr.on("NoteUpdated", (id, note) => {
         this.note = note;
       });
       
-      signalr.invoke("JoinNote", group);
-    },
-    leaveSignalR() {
-      const signalr = useSignalR();
-      signalr.invoke("LeaveNote", this.id);
-      alert("leaving")
+      this.signalr.invoke("JoinNote", group);
     },
   },
   created() {
@@ -83,7 +79,7 @@ export default {
     }
   },
   beforeUnmount() {
-    this.leaveSignalR();
+    this.signalr.invoke("LeaveNote", this.id);
   },
 };
 </script>
