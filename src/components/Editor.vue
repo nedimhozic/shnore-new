@@ -8,6 +8,7 @@
 
 <script>
 import axios from "axios";
+import { nanoid } from 'nanoid'
 import { useSignalR } from "@dreamonkey/vue-signalr";
 
 export default {
@@ -42,22 +43,6 @@ export default {
         this.note = response.data.note;
       });
     },
-    uuid() {
-      var uuidValue = "",
-        k,
-        randomValue;
-      for (k = 0; k < 32; k++) {
-        randomValue = (Math.random() * 16) | 0;
-
-        if (k == 8 || k == 12 || k == 16 || k == 20) {
-          uuidValue += "-";
-        }
-        uuidValue += (
-          k == 12 ? 4 : k == 16 ? (randomValue & 3) | 8 : randomValue
-        ).toString(16);
-      }
-      return uuidValue;
-    },
     initializeSignalR(group) {
       this.signalr.on("NoteUpdated", (id, note) => {
         this.note = note;
@@ -67,12 +52,12 @@ export default {
     },
   },
   created() {
-    this.user = this.uuid();
+    this.user = nanoid();
     if (this.$route.params.id) {
       this.loadNote(this.$route.params.id);
       this.initializeSignalR(this.$route.params.id);
     } else {
-      const uuid = this.uuid();
+      const uuid = nanoid();
       this.$router.push({ name: "editor-id", params: { id: uuid } });
       this.loadNote(uuid);
       this.initializeSignalR(uuid);
